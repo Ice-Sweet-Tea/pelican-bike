@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>加州褐鹈鹕高速骑行</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 0%,#1d2733 0%,#0b0f14 70%);
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .stage{position:relative;width:min(96vw,1000px)}
+  svg#scene{display:block;width:100%;height:auto;border-radius:16px;
+    box-shadow:0 22px 60px rgba(0,0,0,.6);background:#0b0f14}
+  .hud{position:absolute;left:14px;top:12px;display:flex;gap:8px;z-index:5}
+  .wbtn{
+    font:600 14px/1 inherit;letter-spacing:.06em;padding:8px 15px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.42);background:rgba(12,22,32,.42);color:#eaf4fb;
+    cursor:pointer;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+    transition:background .28s ease,color .28s ease,box-shadow .28s ease,transform .12s ease;
+  }
+  .wbtn:hover{background:rgba(255,255,255,.2)}
+  .wbtn:active{transform:translateY(1px)}
+  .wbtn.on{background:#f2f8fc;color:#122530;border-color:#ffffff;box-shadow:0 4px 16px rgba(255,255,255,.28)}
+  .wx{opacity:0;transition:opacity .62s ease}
+  svg#scene.w-sunny  .wx-sunny {opacity:1}
+  svg#scene.w-cloudy .wx-cloudy{opacity:1}
+  svg#scene.w-rainy  .wx-rainy {opacity:1}
+</style>
+</head>
+<body>
+<div class="stage">
+<svg id="scene" class="w-sunny" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="加州褐鹈鹕高速骑自行车">
+  <defs>
+    <linearGradient id="skySunny" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#1c78c9"/>
+      <stop offset="0.42" stop-color="#66bdec"/>
+      <stop offset="0.74" stop-color="#bfe6f8"/>
+      <stop offset="1"   stop-color="#ffe6b9"/>
+    </linearGradient>
+    <linearGradient id="skyCloudy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#5b7085"/>
+      <stop offset="0.45" stop-color="#8b9dad"/>
+      <stop offset="0.8" stop-color="#bcc7d1"/>
+      <stop offset="1"   stop-color="#d8dee4"/>
+    </linearGradient>
+    <linearGradient id="skyRainy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#161d25"/>
+      <stop offset="0.42" stop-color="#333e4a"/>
+      <stop offset="0.78" stop-color="#4c5865"/>
+      <stop offset="1"   stop-color="#5f6b76"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0"   stop-color="#fffbe6" stop-opacity="0.95"/>
+      <stop offset="0.28" stop-color="#ffe9a8" stop-opacity="0.6"/>
+      <stop offset="0.62" stop-color="#ffd98a" stop-opacity="0.2"/>
+      <stop offset="1"   stop-color="#ffd98a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bodyGrad" cx="0.38" cy="0.3" r="0.85">
+      <stop offset="0"   stop-color="#8d7663"/>
+      <stop offset="0.55" stop-color="#6b5545"/>
+      <stop offset="1"   stop-color="#463629"/>
+    </radialGradient>
+    <linearGradient id="pouchGrad" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0"   stop-color="#f7d07a"/>
+      <stop offset="0.5" stop-color="#eaa93f"/>
+      <stop offset="1"   stop-color="#cf7f22"/>
+    </linearGradient>
+    <linearGradient id="beakGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#e8cf9f"/>
+      <stop offset="0.55" stop-color="#d3ad72"/>
+      <stop offset="1"   stop-color="#b98d51"/>
+    </linearGradient>
+    <linearGradient id="wetGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#cfe4f2" stop-opacity="0.5"/>
+      <stop offset="0.45" stop-color="#9fc0d6" stop-opacity="0.22"/>
+      <stop offset="1"   stop-color="#7fa2ba" stop-opacity="0.04"/>
+    </linearGradient>
+    <linearGradient id="roadSunny" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a9997c"/><stop offset="0.35" stop-color="#93856c"/><stop offset="1" stop-color="#6f6555"/>
+    </linearGradient>
+    <linearGradient id="roadCloudy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8b9299"/><stop offset="0.35" stop-color="#767d85"/><stop offset="1" stop-color="#585f66"/>
+    </linearGradient>
+    <linearGradient id="roadRainy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4c555f"/><stop offset="0.35" stop-color="#3d464f"/><stop offset="1" stop-color="#252c33"/>
+    </linearGradient>
+
+    <!-- ===== 远景云朵瓦片（周期 1000） ===== -->
+    <g id="cloudTileSunny">
+      <g fill="#ffffff" opacity="0.95">
+        <ellipse cx="128" cy="90" rx="62" ry="26"/><ellipse cx="176" cy="78" rx="44" ry="22"/>
+        <ellipse cx="84" cy="84" rx="38" ry="18"/><ellipse cx="140" cy="104" rx="52" ry="15"/>
+        <ellipse cx="452" cy="152" rx="52" ry="20"/><ellipse cx="490" cy="142" rx="36" ry="17"/>
+        <ellipse cx="416" cy="146" rx="30" ry="14"/>
+        <ellipse cx="712" cy="66" rx="58" ry="24"/><ellipse cx="756" cy="56" rx="40" ry="19"/>
+        <ellipse cx="672" cy="62" rx="32" ry="15"/><ellipse cx="722" cy="78" rx="48" ry="13"/>
+        <ellipse cx="912" cy="158" rx="46" ry="18"/><ellipse cx="948" cy="148" rx="32" ry="15"/>
+      </g>
+      <g fill="#dcecf7" opacity="0.75">
+        <ellipse cx="132" cy="112" rx="58" ry="8"/><ellipse cx="452" cy="168" rx="48" ry="7"/>
+        <ellipse cx="714" cy="86" rx="52" ry="7"/><ellipse cx="914" cy="174" rx="42" ry="6"/>
+      </g>
+    </g>
+    <g id="cloudTileCloudy">
+      <g fill="#c9d3dc" opacity="0.96">
+        <ellipse cx="140" cy="96" rx="118" ry="40"/><ellipse cx="236" cy="76" rx="86" ry="34"/>
+        <ellipse cx="60" cy="104" rx="82" ry="30"/><ellipse cx="160" cy="122" rx="120" ry="24"/>
+        <ellipse cx="520" cy="120" rx="132" ry="42"/><ellipse cx="620" cy="100" rx="88" ry="32"/>
+        <ellipse cx="428" cy="132" rx="86" ry="28"/>
+        <ellipse cx="846" cy="78" rx="104" ry="36"/><ellipse cx="930" cy="100" rx="96" ry="30"/>
+        <ellipse cx="760" cy="62" rx="70" ry="28"/>
+      </g>
+      <g fill="#9fadba" opacity="0.7">
+        <ellipse cx="150" cy="132" rx="120" ry="18"/><ellipse cx="530" cy="150" rx="126" ry="18"/>
+        <ellipse cx="860" cy="120" rx="112" ry="16"/>
+      </g>
+    </g>
+    <g id="cloudTileRainy">
+      <g fill="#4b5866" opacity="0.95">
+        <ellipse cx="150" cy="82" rx="150" ry="50"/><ellipse cx="290" cy="62" rx="96" ry="38"/>
+        <ellipse cx="40" cy="92" rx="96" ry="34"/><ellipse cx="170" cy="116" rx="150" ry="26"/>
+        <ellipse cx="560" cy="72" rx="140" ry="46"/><ellipse cx="672" cy="94" rx="110" ry="34"/>
+        <ellipse cx="452" cy="98" rx="92" ry="28"/>
+        <ellipse cx="872" cy="66" rx="146" ry="48"/><ellipse cx="760" cy="98" rx="104" ry="30"/>
+      </g>
+      <g fill="#333e4b" opacity="0.72">
+        <ellipse cx="160" cy="126" rx="150" ry="20"/><ellipse cx="570" cy="116" rx="140" ry="18"/>
+        <ellipse cx="880" cy="112" rx="140" ry="18"/>
+      </g>
+    </g>
+
+    <!-- ===== 中景海岸山丘瓦片（周期 1000，填充继承 currentColor） ===== -->
+    <g id="hillTileBack" fill="currentColor">
+      <path d="M0,420 L0,346 Q64,306 128,340 Q186,370 240,330 Q300,288 358,338 Q414,384 470,346
+               Q528,308 588,346 Q642,380 700,338 Q762,292 820,344 Q878,388 936,352 Q968,332 1000,346 L1000,420 Z"/>
+    </g>
+    <g id="hillTileFront" fill="currentColor">
+      <path d="M0,420 L0,382 Q76,352 152,378 Q232,404 312,374 Q392,344 472,378 Q552,406 632,376
+               Q712,346 792,380 Q872,408 936,388 Q970,378 1000,382 L1000,420 Z"/>
+    </g>
+
+    <!-- ===== 近景地面瓦片（周期 1000） ===== -->
+    <g id="groundTile">
+      <g fill="currentColor" opacity="0.55">
+        <ellipse cx="72" cy="431" rx="8" ry="3.6"/><ellipse cx="156" cy="438" rx="5" ry="2.6"/>
+        <ellipse cx="252" cy="429" rx="9" ry="4"/><ellipse cx="330" cy="443" rx="6" ry="3"/>
+        <ellipse cx="428" cy="433" rx="7" ry="3.2"/><ellipse cx="516" cy="440" rx="5" ry="2.4"/>
+        <ellipse cx="604" cy="430" rx="8" ry="3.6"/><ellipse cx="694" cy="444" rx="6" ry="2.8"/>
+        <ellipse cx="786" cy="432" rx="9" ry="4"/><ellipse cx="868" cy="441" rx="6" ry="3"/>
+        <ellipse cx="944" cy="429" rx="7" ry="3.2"/><ellipse cx="196" cy="452" rx="5" ry="2.4"/>
+        <ellipse cx="560" cy="455" rx="6" ry="2.6"/><ellipse cx="836" cy="456" rx="5" ry="2.4"/>
+      </g>
+      <g fill="#f6efd9" opacity="0.7">
+        <rect x="26" y="466" width="92" height="10" rx="5"/>
+        <rect x="226" y="466" width="92" height="10" rx="5"/>
+        <rect x="426" y="466" width="92" height="10" rx="5"/>
+        <rect x="626" y="466" width="92" height="10" rx="5"/>
+        <rect x="826" y="466" width="92" height="10" rx="5"/>
+      </g>
+      <g stroke="currentColor" stroke-width="2.4" fill="none" opacity="0.75" stroke-linecap="round">
+        <path d="M118,421 l-7,-15 M118,421 l2,-17 M118,421 l10,-12"/>
+        <path d="M362,421 l-6,-13 M362,421 l3,-16 M362,421 l9,-11"/>
+        <path d="M610,421 l-7,-14 M610,421 l2,-16 M610,421 l10,-11"/>
+        <path d="M864,421 l-6,-13 M864,421 l2,-15 M864,421 l9,-12"/>
+      </g>
+      <g stroke="#ffffff" stroke-opacity="0.22" stroke-width="2" stroke-linecap="round">
+        <path d="M40,448 h150 M300,452 h190 M600,449 h210 M880,453 h120"/>
+      </g>
+    </g>
+
+    <!-- ===== 速度线瓦片（周期 400） ===== -->
+    <g id="speedTile" stroke="#ffffff" stroke-opacity="0.5" stroke-width="3" stroke-linecap="round" fill="none">
+      <path d="M0,406 h96 M150,414 h74 M280,402 h88 M380,412 h54"/>
+      <path d="M20,431 h120 M190,438 h96 M330,428 h110 M60,447 h70"/>
+    </g>
+
+    <!-- ===== 雨线晶格（周期向量 -45,180） ===== -->
+    <g id="rainLattice" stroke="#dff0ff" stroke-opacity="0.55" stroke-width="2" stroke-linecap="round" fill="none">
+      <path d="M-660,-720 l-45,180 M-500,-720 l-45,180 M-340,-720 l-45,180 M-180,-720 l-45,180 M-20,-720 l-45,180 M140,-720 l-45,180 M300,-720 l-45,180 M460,-720 l-45,180 M620,-720 l-45,180 M780,-720 l-45,180 M940,-720 l-45,180 M1100,-720 l-45,180 M1260,-720 l-45,180"/>
+      <path d="M-615,-540 l-45,180 M-455,-540 l-45,180 M-295,-540 l-45,180 M-135,-540 l-45,180 M25,-540 l-45,180 M185,-540 l-45,180 M345,-540 l-45,180 M505,-540 l-45,180 M665,-540 l-45,180 M825,-540 l-45,180 M985,-540 l-45,180 M1145,-540 l-45,180 M1305,-540 l-45,180"/>
+      <path d="M-570,-360 l-45,180 M-410,-360 l-45,180 M-250,-360 l-45,180 M-90,-360 l-45,180 M70,-360 l-45,180 M230,-360 l-45,180 M390,-360 l-45,180 M550,-360 l-45,180 M710,-360 l-45,180 M870,-360 l-45,180 M1030,-360 l-45,180 M1190,-360 l-45,180 M1350,-360 l-45,180"/>
+      <path d="M-525,-180 l-45,180 M-365,-180 l-45,180 M-205,-180 l-45,180 M-45,-180 l-45,180 M115,-180 l-45,180 M275,-180 l-45,180 M435,-180 l-45,180 M595,-180 l-45,180 M755,-180 l-45,180 M915,-180 l-45,180 M1075,-180 l-45,180 M1235,-180 l-45,180 M1395,-180 l-45,180"/>
+      <path d="M-480,0 l-45,180 M-320,0 l-45,180 M-160,0 l-45,180 M0,0 l-45,180 M160,0 l-45,180 M320,0 l-45,180 M480,0 l-45,180 M640,0 l-45,180 M800,0 l-45,180 M960,0 l-45,180 M1120,0 l-45,180 M1280,0 l-45,180 M1440,0 l-45,180"/>
+      <path d="M-435,180 l-45,180 M-275,180 l-45,180 M-115,180 l-45,180 M45,180 l-45,180 M205,180 l-45,180 M365,180 l-45,180 M525,180 l-45,180 M685,180 l-45,180 M845,180 l-45,180 M1005,180 l-45,180 M1165,180 l-45,180 M1325,180 l-45,180 M1485,180 l-45,180"/>
+      <path d="M-390,360 l-45,180 M-230,360 l-45,180 M-70,360 l-45,180 M90,360 l-45,180 M250,360 l-45,180 M410,360 l-45,180 M570,360 l-45,180 M730,360 l-45,180 M890,360 l-45,180 M1050,360 l-45,180 M1210,360 l-45,180 M1370,360 l-45,180 M1530,360 l-45,180"/>
+      <path d="M-345,540 l-45,180 M-185,540 l-45,180 M-25,540 l-45,180 M135,540 l-45,180 M295,540 l-45,180 M455,540 l-45,180 M615,540 l-45,180 M775,540 l-45,180 M935,540 l-45,180 M1095,540 l-45,180 M1255,540 l-45,180 M1415,540 l-45,180 M1575,540 l-45,180"/>
+      <path d="M-300,720 l-45,180 M-140,720 l-45,180 M20,720 l-45,180 M180,720 l-45,180 M340,720 l-45,180 M500,720 l-45,180 M660,720 l-45,180 M820,720 l-45,180 M980,720 l-45,180 M1140,720 l-45,180 M1300,720 l-45,180 M1460,720 l-45,180 M1620,720 l-45,180"/>
+    </g>
+
+    <!-- 踏板单元（原点=踏板中心） -->
+    <g id="pedalUnit">
+      <rect x="-16" y="-4.5" width="32" height="9" rx="3.5" fill="#2b3238" stroke="#4d575f" stroke-width="1.2"/>
+      <g stroke="#7d8994" stroke-width="1.2" stroke-opacity="0.85">
+        <path d="M-11,-4.5 v9 M-3,-4.5 v9 M5,-4.5 v9 M13,-4.5 v9"/>
+      </g>
+      <circle r="3.2" fill="#8f9aa5"/>
+    </g>
+
+    <!-- 蹼足单元（原点=踝点） -->
+    <g id="footUnit">
+      <path d="M-10,-6 Q0,-12 15,-9 Q28,-6 30,0 Q24,7 6,7 Q-4,7 -9,2 Q-12,-2 -10,-6 Z"
+            fill="#e5ab4f" stroke="#b07a28" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M8,7 L12,-2 M17,6 L19,-4" stroke="#b07a28" stroke-width="1.4" fill="none" opacity="0.85"/>
+      <circle cx="0" cy="-2" r="5" fill="#d79c3e"/>
+    </g>
+  </defs>
+
+  <!-- ============================================================
+       1. 天空
+  ============================================================ -->
+  <g class="wx wx-sunny">
+    <rect x="0" y="0" width="1000" height="500" fill="url(#skySunny)"/>
+    <circle cx="158" cy="84" r="132" fill="url(#sunGlow)"/>
+    <circle cx="158" cy="84" r="34" fill="#fffdf0" opacity="0.95"/>
+    <rect x="0" y="0" width="1000" height="500" fill="#ffd79a" opacity="0.1"/>
+    <rect x="0" y="300" width="1000" height="140" fill="#ffe7b8" opacity="0.24"/>
+  </g>
+  <g class="wx wx-cloudy">
+    <rect x="0" y="0" width="1000" height="500" fill="url(#skyCloudy)"/>
+    <rect x="0" y="0" width="1000" height="500" fill="#e8eef4" opacity="0.2"/>
+    <rect x="0" y="280" width="1000" height="160" fill="#ffffff" opacity="0.14"/>
+  </g>
+  <g class="wx wx-rainy">
+    <rect x="0" y="0" width="1000" height="500" fill="url(#skyRainy)"/>
+    <rect x="0" y="0" width="1000" height="500" fill="#0d1620" opacity="0.28"/>
+    <rect x="0" y="330" width="1000" height="120" fill="#9fb6c6" opacity="0.1"/>
+  </g>
+
+  <!-- ============================================================
+       2. 远景：三层视差最远层（云朵）  38 px/s
+  ============================================================ -->
+  <g id="farScroll">
+    <animateTransform attributeName="transform" type="translate" from="0 0" to="-1000 0" dur="26s" repeatCount="indefinite"/>
+    <g class="wx wx-sunny">
+      <use href="#cloudTileSunny" x="-1000"/><use href="#cloudTileSunny"/><use href="#cloudTileSunny" x="1000"/>
+    </g>
+    <g class="wx wx-cloudy">
+      <use href="#cloudTileCloudy" x="-1000"/><use href="#cloudTileCloudy"/><use href="#cloudTileCloudy" x="1000"/>
+    </g>
+    <g class="wx wx-rainy">
+      <use href="#cloudTileRainy" x="-1000"/><use href="#cloudTileRainy"/><use href="#cloudTileRainy" x="1000"/>
+    </g>
+  </g>
+
+  <!-- ============================================================
+       3. 中景：海岸山丘  125 px/s
+  ============================================================ -->
+  <g id="midScroll">
+    <animateTransform attributeName="transform" type="translate" from="0 0" to="-1000 0" dur="8s" repeatCount="indefinite"/>
+    <g class="wx wx-sunny" style="color:#b79a5c">
+      <g opacity="0.55">
+        <use href="#hillTileBack" x="-1000"/><use href="#hillTileBack"/><use href="#hillTileBack" x="1000"/>
+      </g>
+      <g opacity="0.96">
+        <use href="#hillTileFront" x="-1000"/><use href="#hillTileFront"/><use href="#hillTileFront" x="1000"/>
+      </g>
+    </g>
+    <g class="wx wx-cloudy" style="color:#7c8a80">
+      <g opacity="0.5">
+        <use href="#hillTileBack" x="-1000"/><use href="#hillTileBack"/><use href="#hillTileBack" x="1000"/>
+      </g>
+      <g opacity="0.94">
+        <use href="#hillTileFront" x="-1000"/><use href="#hillTileFront"/><use href="#hillTileFront" x="1000"/>
+      </g>
+    </g>
+    <g class="wx wx-rainy" style="color:#414c58">
+      <g opacity="0.45">
+        <use href="#hillTileBack" x="-1000"/><use href="#hillTileBack"/><use href="#hillTileBack" x="1000"/>
+      </g>
+      <g opacity="0.92">
+        <use href="#hillTileFront" x="-1000"/><use href="#hillTileFront"/><use href="#hillTileFront" x="1000"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============================================================
+       4. 路面基色（静止）
+  ============================================================ -->
+  <g class="wx wx-sunny">
+    <rect x="0" y="420" width="1000" height="80" fill="url(#roadSunny)"/>
+    <rect x="0" y="420" width="1000" height="15" fill="#c9b691" opacity="0.55"/>
+    <rect x="0" y="419" width="1000" height="2.4" fill="#6a5c47" opacity="0.75"/>
+  </g>
+  <g class="wx wx-cloudy">
+    <rect x="0" y="420" width="1000" height="80" fill="url(#roadCloudy)"/>
+    <rect x="0" y="420" width="1000" height="15" fill="#a7aeb5" opacity="0.5"/>
+    <rect x="0" y="419" width="1000" height="2.4" fill="#4e565e" opacity="0.75"/>
+  </g>
+  <g class="wx wx-rainy">
+    <rect x="0" y="420" width="1000" height="80" fill="url(#roadRainy)"/>
+    <rect x="0" y="420" width="1000" height="15" fill="#69747e" opacity="0.42"/>
+    <rect x="0" y="419" width="1000" height="2.4" fill="#1b2229" opacity="0.85"/>
+    <rect x="0" y="420" width="1000" height="80" fill="url(#wetGrad)" opacity="0.55"/>
+    <g fill="#dcecf8" opacity="0.34">
+      <ellipse cx="150" cy="446" rx="120" ry="5"/><ellipse cx="420" cy="462" rx="160" ry="6"/>
+      <ellipse cx="700" cy="440" rx="130" ry="5"/><ellipse cx="900" cy="474" rx="110" ry="5"/>
+      <ellipse cx="300" cy="486" rx="180" ry="6"/><ellipse cx="720" cy="492" rx="150" ry="5"/>
+    </g>
+    <g fill="#eaf5ff">
+      <ellipse cx="210" cy="452" rx="9" ry="3">
+        <animate attributeName="opacity" values="0;0.75;0" dur="0.9s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="360" cy="470" rx="11" ry="3.4">
+        <animate attributeName="opacity" values="0;0.7;0" dur="0.7s" begin="0.15s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="560" cy="446" rx="10" ry="3">
+        <animate attributeName="opacity" values="0;0.8;0" dur="0.8s" begin="0.3s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="690" cy="478" rx="12" ry="3.6">
+        <animate attributeName="opacity" values="0;0.66;0" dur="0.62s" begin="0.05s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="860" cy="456" rx="10" ry="3">
+        <animate attributeName="opacity" values="0;0.72;0" dur="0.85s" begin="0.4s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="110" cy="482" rx="13" ry="3.6">
+        <animate attributeName="opacity" values="0;0.6;0" dur="0.75s" begin="0.24s" repeatCount="indefinite"/>
+      </ellipse>
+    </g>
+  </g>
+
+  <!-- ============================================================
+       5. 近景地面细节  417 px/s
+  ============================================================ -->
+  <g id="nearScroll">
+    <animateTransform attributeName="transform" type="translate" from="0 0" to="-1000 0" dur="2.4s" repeatCount="indefinite"/>
+    <g class="wx wx-sunny" style="color:#7d6d52">
+      <use href="#groundTile" x="-1000"/><use href="#groundTile"/><use href="#groundTile" x="1000"/>
+    </g>
+    <g class="wx wx-cloudy" style="color:#5f676e">
+      <use href="#groundTile" x="-1000"/><use href="#groundTile"/><use href="#groundTile" x="1000"/>
+    </g>
+    <g class="wx wx-rainy" style="color:#39424c">
+      <use href="#groundTile" x="-1000"/><use href="#groundTile"/><use href="#groundTile" x="1000"/>
+    </g>
+  </g>
+
+  <!-- ============================================================
+       6. 速度线（地面 + 车架下方）  800 px/s
+  ============================================================ -->
+  <g id="speedScroll">
+    <animateTransform attributeName="transform" type="translate" from="0 0" to="-400 0" dur="0.5s" repeatCount="indefinite"/>
+    <use href="#speedTile" x="-400"/><use href="#speedTile"/><use href="#speedTile" x="400"/><use href="#speedTile" x="800"/>
+  </g>
+  <g opacity="0.42" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none">
+    <path d="M300,362 h150 M470,382 h120 M520,402 h140"/>
+    <animateTransform attributeName="transform" type="translate" from="160 0" to="-160 0" dur="0.42s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- ============================================================
+       7. 雨（远景层，位于车前）
+  ============================================================ -->
+  <g class="wx wx-rainy">
+    <use href="#rainLattice"/>
+    <animateTransform attributeName="transform" type="translate" from="45 -180" to="0 0" dur="0.3s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- ============================================================
+       8. 自行车（远侧部分）
+  ============================================================ -->
+  <!-- 远侧腿 -->
+  <g id="legFar" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke="#a98d5c" stroke-width="18" d="M468,199 L525.3,268.4">
+      <animate attributeName="d" dur="0.6s" repeatCount="indefinite" calcMode="linear"
+        values="M468,199 L525.3,268.4;M468,199 L532.0,262.3;M468,199 L538.6,254.8;M468,199 L544.3,246.8;M468,199 L548.0,240.1;M468,199 L549.6,237.0;M468,199 L548.9,238.4;M468,199 L546.1,243.8;M468,199 L540.8,251.9;M468,199 L533.3,260.9;M468,199 L524.6,269.0;M468,199 L516.7,274.7;M468,199 L512.1,277.4;M468,199 L511.7,277.7;M468,199 L514.5,276.1;M468,199 L519.2,273.0;M468,199 L525.3,268.4"/>
+    </path>
+    <path stroke="#a1855a" stroke-width="12" d="M525.3,268.4 L470.0,342.0">
+      <animate attributeName="d" dur="0.6s" repeatCount="indefinite" calcMode="linear"
+        values="M525.3,268.4 L470.0,342.0;M532.0,262.3 L472.0,332.1;M538.6,254.8 L477.6,323.6;M544.3,246.8 L486.1,318.0;M548.0,240.1 L496.0,316.0;M549.6,237.0 L505.9,318.0;M548.9,238.4 L514.4,323.6;M546.1,243.8 L520.0,332.1;M540.8,251.9 L522.0,342.0;M533.3,260.9 L520.0,351.9;M524.6,269.0 L514.4,360.4;M516.7,274.7 L505.9,366.0;M512.1,277.4 L496.0,368.0;M511.7,277.7 L486.1,366.0;M514.5,276.1 L477.6,360.4;M519.2,273.0 L472.0,351.9;M525.3,268.4 L470.0,342.0"/>
+    </path>
+  </g>
+  <!-- 远侧脚踏 -->
+  <g>
+    <use href="#pedalUnit" x="0" y="0" opacity="0.85"/>
+    <animateMotion dur="0.6s" repeatCount="indefinite" rotate="0" calcMode="paced"
+      path="M474,350 A26,26 0 1 1 526,350 A26,26 0 1 1 474,350"/>
+  </g>
+  <!-- 远侧蹼足 -->
+  <g opacity="0.92">
+    <use href="#footUnit"/>
+    <animateMotion dur="0.6s" repeatCount="indefinite" rotate="0" calcMode="paced"
+      path="M470,342 A26,26 0 1 1 522,342 A26,26 0 1 1 470,342"/>
+  </g>
+
+  <!-- 车轮投影 -->
+  <g fill="#000000" opacity="0.26">
+    <ellipse cx="390" cy="421" rx="72" ry="7"/>
+    <ellipse cx="630" cy="421" rx="72" ry="7"/>
+    <ellipse cx="508" cy="422" rx="180" ry="8"/>
+  </g>
+
+  <!-- 后轮 / 前轮（半径完全相同，轮底同落在 y=420 地面线上） -->
+  <g transform="translate(390,340)">
+    <circle r="74" fill="none" stroke="#1d2126" stroke-width="12"/>
+    <circle r="72" fill="none" stroke="#3a4249" stroke-width="1.4" opacity="0.8"/>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="0.6s" repeatCount="indefinite"/>
+      <path d="M0,0 L64,0 M0,0 L59.1,24.5 M0,0 L45.3,45.3 M0,0 L24.5,59.1 M0,0 L0,64 M0,0 L-24.5,59.1 M0,0 L-45.3,45.3 M0,0 L-59.1,24.5 M0,0 L-64,0 M0,0 L-59.1,-24.5 M0,0 L-45.3,-45.3 M0,0 L-24.5,-59.1 M0,0 L0,-64 M0,0 L24.5,-59.1 M0,0 L45.3,-45.3 M0,0 L59.1,-24.5"
+            fill="none" stroke="#e6eef6" stroke-opacity="0.62" stroke-width="1.8" stroke-linecap="round"/>
+      <g transform="rotate(7)" fill="none" stroke="#e6eef6" stroke-opacity="0.2" stroke-width="5" stroke-linecap="round">
+        <path d="M0,0 L64,0 M0,0 L45.3,45.3 M0,0 L0,64 M0,0 L-45.3,45.3 M0,0 L-64,0 M0,0 L-45.3,-45.3 M0,0 L0,-64 M0,0 L45.3,-45.3"/>
+      </g>
+      <g transform="rotate(15)" fill="none" stroke="#e6eef6" stroke-opacity="0.13" stroke-width="7" stroke-linecap="round">
+        <path d="M0,0 L64,0 M0,0 L45.3,45.3 M0,0 L0,64 M0,0 L-45.3,45.3 M0,0 L-64,0 M0,0 L-45.3,-45.3 M0,0 L0,-64 M0,0 L45.3,-45.3"/>
+      </g>
+      <path d="M70,0 A70,70 0 0 1 0,70" fill="none" stroke="#ffffff" stroke-opacity="0.34" stroke-width="3"/>
+      <path d="M0,-70 A70,70 0 0 1 -70,0" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-width="3"/>
+      <path d="M0,70 A70,70 0 0 1 70,0" fill="none" stroke="#bcd8ff" stroke-opacity="0.22" stroke-width="2.4"/>
+      <path d="M-70,0 A70,70 0 0 1 0,-70" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="2.4"/>
+      <circle r="21" fill="none" stroke="#8b98a4" stroke-width="2" stroke-dasharray="3 3.6" opacity="0.75"/>
+      <circle r="7.5" fill="#2b3138" stroke="#95a1ac" stroke-width="1.6"/>
+    </g>
+    <circle r="74" fill="none" stroke="#cfe4ff" stroke-opacity="0.1" stroke-width="11"/>
+  </g>
+  <g transform="translate(630,340)">
+    <circle r="74" fill="none" stroke="#1d2126" stroke-width="12"/>
+    <circle r="72" fill="none" stroke="#3a4249" stroke-width="1.4" opacity="0.8"/>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="0.6s" repeatCount="indefinite"/>
+      <path d="M0,0 L64,0 M0,0 L59.1,24.5 M0,0 L45.3,45.3 M0,0 L24.5,59.1 M0,0 L0,64 M0,0 L-24.5,59.1 M0,0 L-45.3,45.3 M0,0 L-59.1,24.5 M0,0 L-64,0 M0,0 L-59.1,-24.5 M0,0 L-45.3,-45.3 M0,0 L-24.5,-59.1 M0,0 L0,-64 M0,0 L24.5,-59.1 M0,0 L45.3,-45.3 M0,0 L59.1,-24.5"
+            fill="none" stroke="#e6eef6" stroke-opacity="0.62" stroke-width="1.8" stroke-linecap="round"/>
+      <g transform="rotate(7)" fill="none" stroke="#e6eef6" stroke-opacity="0.2" stroke-width="5" stroke-linecap="round">
+        <path d="M0,0 L64,0 M0,0 L45.3,45.3 M0,0 L0,64 M0,0 L-45.3,45.3 M0,0 L-64,0 M0,0 L-45.3,-45.3 M0,0 L0,-64 M0,0 L45.3,-45.3"/>
+      </g>
+      <g transform="rotate(15)" fill="none" stroke="#e6eef6" stroke-opacity="0.13" stroke-width="7" stroke-linecap="round">
+        <path d="M0,0 L64,0 M0,0 L45.3,45.3 M0,0 L0,64 M0,0 L-45.3,45.3 M0,0 L-64,0 M0,0 L-45.3,-45.3 M0,0 L0,-64 M0,0 L45.3,-45.3"/>
+      </g>
+      <path d="M70,0 A70,70 0 0 1 0,70" fill="none" stroke="#ffffff" stroke-opacity="0.34" stroke-width="3"/>
+      <path d="M0,-70 A70,70 0 0 1 -70,0" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-width="3"/>
+      <path d="M0,70 A70,70 0 0 1 70,0" fill="none" stroke="#bcd8ff" stroke-opacity="0.22" stroke-width="2.4"/>
+      <path d="M-70,0 A70,70 0 0 1 0,-70" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="2.4"/>
+      <circle r="21" fill="none" stroke="#8b98a4" stroke-width="2" stroke-dasharray="3 3.6" opacity="0.75"/>
+      <circle r="7.5" fill="#2b3138" stroke="#95a1ac" stroke-width="1.6"/>
+    </g>
+    <circle r="74" fill="none" stroke="#cfe4ff" stroke-opacity="0.1" stroke-width="11"/>
+  </g>
+
+  <!-- 车架（菱形） -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#0f4b57" stroke-width="13" opacity="0.35">
+      <path d="M500,350 L390,340"/><path d="M452,222 L390,340"/><path d="M500,350 L452,222"/>
+      <path d="M500,350 L606,238"/><path d="M452,222 L600,214"/>
+    </g>
+    <path d="M500,350 L390,340" stroke="#1a7285" stroke-width="6.5"/>
+    <path d="M452,222 L390,340" stroke="#1a7285" stroke-width="6.5"/>
+    <path d="M500,350 L452,222" stroke="#1f7d91" stroke-width="9.5"/>
+    <path d="M500,350 L606,238" stroke="#1f7d91" stroke-width="9.5"/>
+    <path d="M452,222 L600,214" stroke="#1f7d91" stroke-width="9"/>
+    <path d="M599,213 L607,239" stroke="#166579" stroke-width="12"/>
+    <path d="M606,238 Q623,290 630,340" stroke="#2b3a41" stroke-width="7"/>
+    <path d="M606,238 Q623,290 630,340" stroke="#7c8b93" stroke-width="2" opacity="0.55"/>
+    <path d="M452,222 L450,204" stroke="#6f7c85" stroke-width="5"/>
+    <path d="M600,214 L591,202" stroke="#55636c" stroke-width="6.5"/>
+  </g>
+  <!-- 车座 -->
+  <path d="M424,207 Q431,195 452,195 Q478,195 486,203 Q489,211 473,213 L438,213 Q426,213 424,207 Z"
+        fill="#232a30" stroke="#4a555e" stroke-width="1.6"/>
+  <path d="M430,201 Q452,196 480,202" fill="none" stroke="#6d7a84" stroke-width="2" opacity="0.7"/>
+  <!-- 车把 -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M562,207 Q590,197 622,200" stroke="#2d363d" stroke-width="7"/>
+    <path d="M562,207 Q590,197 622,200" stroke="#8b98a2" stroke-width="2" opacity="0.5"/>
+    <path d="M564,207 L584,201" stroke="#15191d" stroke-width="10"/>
+    <path d="M606,199 L624,200" stroke="#15191d" stroke-width="10"/>
+  </g>
+
+  <!-- 链条 + 牙盘 + 曲柄 -->
+  <g>
+    <path d="M393,329 L502,331" fill="none" stroke="#3c444b" stroke-width="4.4" stroke-dasharray="7 5">
+      <animate attributeName="stroke-dashoffset" from="24" to="0" dur="0.6s" repeatCount="indefinite"/>
+    </path>
+    <path d="M393,352 L502,370" fill="none" stroke="#3c444b" stroke-width="4.4" stroke-dasharray="7 5">
+      <animate attributeName="stroke-dashoffset" from="24" to="0" dur="0.6s" repeatCount="indefinite"/>
+    </path>
+    <circle cx="390" cy="340" r="11" fill="none" stroke="#7f8b96" stroke-width="3.4"/>
+    <circle cx="390" cy="340" r="12.6" fill="none" stroke="#98a4ae" stroke-width="2.2" stroke-dasharray="2.4 3"/>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0 500 350" to="360 500 350" dur="0.6s" repeatCount="indefinite"/>
+      <circle cx="500" cy="350" r="20" fill="none" stroke="#8d99a4" stroke-width="3.4"/>
+      <circle cx="500" cy="350" r="22" fill="none" stroke="#a8b4be" stroke-width="2.6" stroke-dasharray="2.8 3.4"/>
+      <circle cx="500" cy="350" r="9" fill="none" stroke="#7f8b96" stroke-width="2"/>
+      <path d="M500,350 L526,350 M500,350 L474,350" stroke="#2b3138" stroke-width="7" stroke-linecap="round"/>
+      <path d="M482,350 h36 M500,332 v36" stroke="#5d686f" stroke-width="3.2" stroke-linecap="round" opacity="0.9"/>
+    </g>
+    <circle cx="500" cy="350" r="5" fill="#3a4249"/>
+  </g>
+  <!-- 近侧脚踏 -->
+  <g>
+    <use href="#pedalUnit"/>
+    <animateMotion dur="0.6s" repeatCount="indefinite" rotate="0" calcMode="paced"
+      path="M526,350 A26,26 0 1 1 474,350 A26,26 0 1 1 526,350"/>
+  </g>
+  <!-- 近侧蹼足 -->
+  <g>
+    <use href="#footUnit"/>
+    <animateMotion dur="0.6s" repeatCount="indefinite" rotate="0" calcMode="paced"
+      path="M522,342 A26,26 0 1 1 470,342 A26,26 0 1 1 522,342"/>
+  </g>
+
+  <!-- ============================================================
+       9. 加州褐鹈鹕
+  ============================================================ -->
+  <!-- 近侧腿 -->
+  <g id="legNear" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke="#e0c07f" stroke-width="19" d="M478,204 L552.1,255.1">
+      <animate attributeName="d" dur="0.6s" repeatCount="indefinite" calcMode="linear"
+        values="M478,204 L552.1,255.1;M478,204 L545.5,263.5;M478,204 L537.7,271.4;M478,204 L530.2,277.3;M478,204 L525.1,280.7;M478,204 L523.2,281.8;M478,204 L524.4,281.1;M478,204 L527.9,278.9;M478,204 L533.2,275.1;M478,204 L539.6,269.6;M478,204 L546.4,262.5;M478,204 L552.6,254.4;M478,204 L557.0,247.1;M478,204 L559.1,242.9;M478,204 L559.0,243.2;M478,204 L556.7,247.7;M478,204 L552.1,255.1"/>
+    </path>
+    <path stroke="#dcb972" stroke-width="12" d="M552.1,255.1 L522.0,342.0">
+      <animate attributeName="d" dur="0.6s" repeatCount="indefinite" calcMode="linear"
+        values="M552.1,255.1 L522.0,342.0;M545.5,263.5 L520.0,351.9;M537.7,271.4 L514.4,360.4;M530.2,277.3 L505.9,366.0;M525.1,280.7 L496.0,368.0;M523.2,281.8 L486.1,366.0;M524.4,281.1 L477.6,360.4;M527.9,278.9 L472.0,351.9;M533.2,275.1 L470.0,342.0;M539.6,269.6 L472.0,332.1;M546.4,262.5 L477.6,323.6;M552.6,254.4 L486.1,318.0;M557.0,247.1 L496.0,316.0;M559.1,242.9 L505.9,318.0;M559.0,243.2 L514.4,323.6;M556.7,247.7 L520.0,332.1;M552.1,255.1 L522.0,342.0"/>
+    </path>
+  </g>
+
+  <!-- 身体（轻微弹跳） -->
+  <g id="pelicanBob">
+    <animateTransform attributeName="transform" type="translate" dur="0.6s" repeatCount="indefinite"
+      values="0 0; 0 -4; 0 0; 0 4; 0 0" keyTimes="0; 0.25; 0.5; 0.75; 1"/>
+    <!-- 尾羽 -->
+    <path d="M386,150 Q340,130 312,136 Q322,158 352,173 Q372,180 388,178 Z" fill="#5a4838"/>
+    <path d="M380,156 Q346,140 322,142 Q332,158 356,168 Q372,173 384,170 Z" fill="#6d5946" opacity="0.85"/>
+    <!-- 躯干 -->
+    <ellipse cx="452" cy="150" rx="86" ry="57" fill="url(#bodyGrad)"/>
+    <!-- 羽毛分层 -->
+    <path d="M374,124 Q442,100 522,130 Q470,162 374,124 Z" fill="#9d8b78" opacity="0.4"/>
+    <path d="M382,166 Q448,144 522,166 Q466,200 382,166 Z" fill="#54432f" opacity="0.45"/>
+    <path d="M396,182 q14,10 28,0 q14,10 28,0 q14,10 28,0 q14,10 28,0" fill="none" stroke="#3b2e22" stroke-width="2" opacity="0.4"/>
+    <path d="M400,132 q16,-10 32,-2 q16,-8 32,-2" fill="none" stroke="#b6a692" stroke-width="2" opacity="0.5"/>
+    <path d="M520,140 q12,12 6,26" fill="none" stroke="#3f3225" stroke-width="2" opacity="0.35"/>
+    <!-- 翅膀 + 握把 -->
+    <path d="M448,108 C520,118 566,146 592,186 L606,204 C598,213 586,212 579,203 L556,180 C516,168 476,152 444,136 Z"
+          fill="#a08a73"/>
+    <path d="M520,150 C556,166 578,186 592,200 L570,192 C548,176 520,164 496,158 Z" fill="#7b6857" opacity="0.75"/>
+    <path d="M500,140 C534,152 558,170 576,190" fill="none" stroke="#c0ae99" stroke-width="2" opacity="0.55"/>
+    <path d="M520,158 C548,170 566,184 580,196" fill="none" stroke="#cbbca8" stroke-width="1.6" opacity="0.4"/>
+    <path d="M584,188 q20,-6 26,5 q3,9 -8,12 q-16,3 -22,-7 z" fill="#e8cf9a" stroke="#b79c63" stroke-width="1.2"/>
+  </g>
+
+  <!-- 颈 + 头（保持稳定，不随身体弹跳） -->
+  <g id="headGroup">
+    <path d="M492,148 C484,112 508,86 552,76 L574,100 C538,110 522,132 516,160 Z" fill="#f2ecdc"/>
+    <path d="M492,148 C484,112 508,86 552,76 L558,92 C520,102 504,124 508,152 Z" fill="#8f3b28" opacity="0.82"/>
+    <path d="M512,150 C512,126 522,106 540,94" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.5"/>
+    <ellipse cx="582" cy="76" rx="28" ry="25" fill="#f4efe0"/>
+    <path d="M554,74 Q560,47 584,48 Q608,49 610,71 Q588,59 554,74 Z" fill="#e9d693"/>
+    <path d="M556,64 Q552,86 566,99 Q573,103 575,100 Q560,86 566,62 Z" fill="#8f3b28" opacity="0.9"/>
+    <path d="M578,54 q22,-4 30,12 q-10,14 -30,10 z" fill="#6f7a80" opacity="0.25"/>
+    <!-- 眼 -->
+    <circle cx="592" cy="70" r="9.5" fill="#fbfaf5"/>
+    <circle cx="592" cy="70" r="6.2" fill="#2a1f14"/>
+    <circle cx="589.6" cy="67.4" r="2.1" fill="#ffffff" opacity="0.92"/>
+    <path d="M583,62 q9,-5 17,-1" fill="none" stroke="#3b2f22" stroke-width="1.6" opacity="0.7"/>
+    <!-- 喙 + 喉囊（喉囊后缘贴颈前缘、上缘与喙下缘完全重合，无任何缝隙） -->
+    <path d="M604,84 C556,102 522,134 508,150 C580,166 648,162 706,152 C756,145 782,131 794,110 Q700,86 604,80 Z"
+          fill="url(#pouchGrad)" stroke="#bd7f22" stroke-width="1.4"/>
+    <path d="M604,104 C620,140 668,150 706,144" fill="none" stroke="#c98a2a" stroke-width="1.6" opacity="0.45"/>
+    <path d="M604,60 Q706,66 802,96 L808,106 L794,111 Q700,86 604,80 Z" fill="url(#beakGrad)" stroke="#a8804a" stroke-width="1.2"/>
+    <path d="M604,80 Q700,86 794,110" fill="none" stroke="#a3742f" stroke-width="2.4" opacity="0.85"/>
+    <path d="M792,102 q11,6 5,15 q-5,-6 -12,-8 z" fill="#c9a06a"/>
+    <path d="M614,66 Q700,74 790,102" fill="none" stroke="#f2e2c2" stroke-width="2" opacity="0.45"/>
+  </g>
+
+  <!-- ============================================================
+       10. 前景雨丝（更靠近镜头，速度略快）
+  ============================================================ -->
+  <g class="wx wx-rainy">
+    <g opacity="0.5">
+      <use href="#rainLattice"/>
+      <animateTransform attributeName="transform" type="translate" from="45 -180" to="0 0" dur="0.24s" begin="-0.09s" repeatCount="indefinite"/>
+    </g>
+  </g>
+</svg>
+
+<div class="hud">
+  <button class="wbtn on" type="button" data-w="sunny" aria-pressed="true">晴天</button>
+  <button class="wbtn" type="button" data-w="cloudy" aria-pressed="false">阴天</button>
+  <button class="wbtn" type="button" data-w="rainy" aria-pressed="false">雨天</button>
+</div>
+</div>
+
+<script>
+(function () {
+  var scene = document.getElementById('scene');
+  var btns = document.querySelectorAll('.wbtn');
+  var kinds = ['sunny', 'cloudy', 'rainy'];
+
+  function applyWeather(w) {
+    for (var i = 0; i < kinds.length; i++) {
+      scene.classList.remove('w-' + kinds[i]);
+    }
+    scene.classList.add('w-' + w);
+    scene.setAttribute('aria-label', '加州褐鹈鹕高速骑行 - ' + w);
+    for (var j = 0; j < btns.length; j++) {
+      var on = btns[j].getAttribute('data-w') === w;
+      btns[j].classList.toggle('on', on);
+      btns[j].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+  }
+
+  function handler() {
+    applyWeather(this.getAttribute('data-w'));
+  }
+
+  for (var k = 0; k < btns.length; k++) {
+    btns[k].addEventListener('click', handler, false);
+  }
+})();
+</script>
+</body>
+</html>
